@@ -5,7 +5,7 @@ export default props => {
 
     const renderRows = () => {
         return variations.map(variation => (
-            <tr className={variation.style}>
+            <tr className={variation.style} key={variation.key}>
                 <td>
                     <i className={variation.icon}></i>
                 </td>

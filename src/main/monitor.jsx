@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import axios from 'axios'
 import './monitor.css'
+import localStorage from 'local-storage'
 
 import VariationTable from './variationTable'
 
@@ -14,14 +15,20 @@ const initialState = {
     "low": 0,
     "variation": 0,
     "compPrice": 0,
-    "variations": []
+    "variations": [],
+    "lastUpdate": 0
 }
 
 export default class Monitor extends Component{
     constructor(props) {
         super(props)
 
-        this.state = initialState
+        if (localStorage.get("state-BTC")){
+            this.state = localStorage.get("state-BTC")
+        } else {
+            this.state = initialState
+            localStorage.set("state-BTC", this.state)
+        }
 
         this.refresh = this.refresh.bind(this)
         this.changeCrypto = this.changeCrypto.bind(this)
@@ -29,26 +36,34 @@ export default class Monitor extends Component{
 
     componentDidMount() {
         this.refresh()
-        this.interval = setInterval(this.refresh, 5000)
+        this.interval = setInterval(this.refresh, 2000)
     }
     componentWillMount() {
         clearInterval(this.interval)
     }
 
     changeCrypto(e) {
-        this.setState({
-            ...initialState,
-            crypto: e.target.value
-        }, function() { this.refresh() })
+        const crypto = e.target.value
+        localStorage.set(`state-${this.state.crypto}`, this.state)
+
+        if (localStorage.get(`state-${crypto}`)) {
+            this.setState(localStorage.get(`state-${crypto}`))
+        } else {
+            this.setState({
+                ...initialState,
+                crypto
+            }, function() { this.refresh() })
+        }
     }
     
-    refresh() {
+    refresh() {        
         axios.get(`${URL}/${this.state.crypto}/ticker/`)
             .then(resp => this.setState({
                 ...this.state,
                 lastPrice: parseFloat(resp.data.ticker.last).toFixed(2),
                 high: parseFloat(resp.data.ticker.high).toFixed(2),
                 low: parseFloat(resp.data.ticker.low).toFixed(2),
+                lastUpdate: resp.data.ticker.date
             }))
         
         if (this.state.compPrice > 0) {
@@ -67,7 +82,13 @@ export default class Monitor extends Component{
                         variation: `${signal} ${percent.toFixed(2)}%`,
                         compPrice: this.state.lastPrice,
                         variations: [ 
-                            { "value": this.state.lastPrice, "percent": percent, "style": "alert-danger", "icon": "fa fa-sort-down"},
+                            { 
+                                "value": this.state.lastPrice, 
+                                "percent": percent, 
+                                "style": "alert-danger", 
+                                "icon": "fa fa-sort-down",
+                                "key": this.state.lastUpdate
+                            },
                             ...this.state.variations,
                         ]
                     })
@@ -86,7 +107,13 @@ export default class Monitor extends Component{
                         variation: `${signal} ${percent.toFixed(2)}%`,
                         compPrice: this.state.lastPrice,
                         variations: [ 
-                            { "value": this.state.lastPrice, "percent": percent, "style": "alert-success", "icon": "fa fa-sort-up"},
+                            { 
+                                "value": this.state.lastPrice, 
+                                "percent": percent, 
+                                "style": "alert-success", 
+                                "icon": "fa fa-sort-up",
+                                "key": this.state.lastUpdate
+                            },
                             ...this.state.variations,
                         ]
                     })
@@ -96,7 +123,7 @@ export default class Monitor extends Component{
         } else { 
             this.setState({ ...this.state, compPrice: this.state.lastPrice})
         }
-        console.log(this.state)
+        localStorage.set(`state-${this.state.crypto}`, this.state)
     }
 
     render() {
