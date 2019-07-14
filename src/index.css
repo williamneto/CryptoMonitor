@@ -1,0 +1,23 @@
+@font-face {
+    font-family: 'PressStart2P-Regular';
+    src: url('./fonts/PressStart2P-Regular.ttf')
+}
+
+@font-face {
+    font-family: 'SairaCondensed-Regular';
+    src: url('./fonts/SairaCondensed-Regular.ttf')
+}
+
+* {
+    font-family: 'SairaCondensed-Regular';
+}
+
+body {
+    display: flex;
+    height: 100vh;
+    justify-content: center;
+    text-align: center;
+    background: linear-gradient(to right, rgb(171, 186, 171), rgb(255, 255, 255));
+}
+
+  
