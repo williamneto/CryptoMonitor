@@ -1,7 +1,7 @@
-### Crypto Monior
+### Crypto Monitor
 
 
-App para acompanhar o preço das criptomoedas Bitcoin e Litecoin
+App simples para acompanhar o preço das criptomoedas Bitcoin e Litecoin
 
 [![](https://pbs.twimg.com/media/D_d9pIxXYAAbR-K.png)](https://pbs.twimg.com/media/D_d9pIxXYAAbR-K.png)
 
