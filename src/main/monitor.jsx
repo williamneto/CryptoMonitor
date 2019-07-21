@@ -35,7 +35,6 @@ export default class Monitor extends Component{
     }
 
     componentDidMount() {
-        this.refresh()
         this.interval = setInterval(this.refresh, 2000)
     }
     componentWillMount() {
@@ -47,13 +46,29 @@ export default class Monitor extends Component{
         localStorage.set(`state-${this.state.crypto}`, this.state)
 
         if (localStorage.get(`state-${crypto}`)) {
-            this.setState(localStorage.get(`state-${crypto}`))
+            this.setState(localStorage.get(`state-${crypto}`), function() { this.refresh() })
         } else {
             this.setState({
                 ...initialState,
                 crypto
             }, function() { this.refresh() })
         }
+    }
+
+    timeConverter(UNIX_timestamp){
+        var a = new Date(UNIX_timestamp * 1000)
+        var year = a.getFullYear()
+        var month = a.getMonth() + 1
+        var date = a.getDate()
+        var hour = a.getHours()
+        var min = a.getMinutes()
+        var sec = a.getSeconds()
+        var time = hour + ':' + min + ':' + sec 
+        return time
+    }
+
+    updateBackground() {
+        
     }
     
     refresh() {        
@@ -87,7 +102,7 @@ export default class Monitor extends Component{
                                 "percent": percent, 
                                 "style": "alert-danger", 
                                 "icon": "fa fa-sort-down",
-                                "key": this.state.lastUpdate
+                                "lastUpdate": this.timeConverter(this.state.lastUpdate)
                             },
                             ...this.state.variations,
                         ]
@@ -112,7 +127,7 @@ export default class Monitor extends Component{
                                 "percent": percent, 
                                 "style": "alert-success", 
                                 "icon": "fa fa-sort-up",
-                                "key": this.state.lastUpdate
+                                "lastUpdate": this.timeConverter(this.state.lastUpdate)
                             },
                             ...this.state.variations,
                         ]
@@ -123,7 +138,45 @@ export default class Monitor extends Component{
         } else { 
             this.setState({ ...this.state, compPrice: this.state.lastPrice})
         }
+
         localStorage.set(`state-${this.state.crypto}`, this.state)
+        
+
+        // Background update
+
+        const coins = ["BTC", "LTC", "XRP", "ETH"]
+
+        coins.map(coin => ( 
+            axios.get(`${URL}/${coin}/ticker/`)
+                .then(function(resp) {
+                    console.log(`Updated ${coin}`)
+                    if (localStorage.get(`state-${coin}`)) {
+                        const state = {
+                            ...localStorage.get(`state-${coin}`),
+                            crypto: coin,
+                            lastPrice: parseFloat(resp.data.ticker.last).toFixed(2),
+                            high: parseFloat(resp.data.ticker.high).toFixed(2),
+                            low: parseFloat(resp.data.ticker.low).toFixed(2),
+                            lastUpdate: resp.data.ticker.date
+                        }
+
+                        localStorage.set(`state-${coin}`, state)
+
+                    } else {
+                        const state = {
+                            ...initialState,
+                            crypto: coin,
+                            lastPrice: parseFloat(resp.data.ticker.last).toFixed(2),
+                            high: parseFloat(resp.data.ticker.high).toFixed(2),
+                            low: parseFloat(resp.data.ticker.low).toFixed(2),
+                            lastUpdate: resp.data.ticker.date
+                        }
+
+                        localStorage.set(`state-${coin}`, state)
+                    }
+                    
+            })
+        ))
     }
 
     render() {
@@ -137,6 +190,8 @@ export default class Monitor extends Component{
                             <select className='' id='selectCrypto' onChange={this.changeCrypto}>
                                 <option value="BTC">BTC</option>
                                 <option value="LTC">LTC</option>
+                                <option value="XRP">XRP</option>
+                                <option value="ETH">ETH</option>
                             </select>
                         </div>
                         <div className="col-sm-4">
@@ -158,7 +213,9 @@ export default class Monitor extends Component{
                         </div>
                     </div>
 
-                    <VariationTable variations={this.state.variations}/>
+                    <div className="variation-container">
+                        <VariationTable variations={this.state.variations}/>
+                    </div>
                 </div>
             </div>
         )

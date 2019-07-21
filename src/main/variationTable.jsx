@@ -1,11 +1,14 @@
 import React from "react"
 
+import './variationTable.css'
+
 export default props => {
     const variations = props.variations || []
 
     const renderRows = () => {
-        return variations.map(variation => (
-            <tr className={variation.style} key={variation.key}>
+        return variations.map((variation, index) => (
+            <tr className={variation.style} key={index}>
+                <td>{variation.lastUpdate}</td>
                 <td>
                     <i className={variation.icon}></i>
                 </td>
@@ -19,6 +22,7 @@ export default props => {
         <table className="table">
             <thead>
                 <tr>
+                    <th></th>
                     <th></th>
                     <th>Valor</th>
                     <th>Variação</th>
